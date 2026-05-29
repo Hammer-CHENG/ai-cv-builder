@@ -86,6 +86,24 @@ AI-powered resume builder for Hong Kong job seekers. User builds a master profil
 
 **Relationship:** `resumes` 1:N `jd_sessions`. Master profile is never modified by JD sessions; sessions produce independent outputs.
 
+### Supabase Auth → public.users Sync
+Supabase writes new users to `auth.users` (protected schema), not `public.users`. A PostgreSQL trigger in `001_initial_schema.sql` auto-creates the `public.users` row:
+
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.users (id, email, created_at)
+  VALUES (new.id, new.email, new.created_at);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
+
 ---
 
 ## API Endpoints
@@ -94,7 +112,7 @@ AI-powered resume builder for Hong Kong job seekers. User builds a master profil
 All endpoints require `Authorization: Bearer <supabase-jwt>`. JWT validated via FastAPI dependency.
 
 ### Resume (Master Profile)
-- `POST /api/resumes` — Create master profile (user can only have one active)
+- `POST /api/resumes` — Create master profile (enforced single per user via `UNIQUE(user_id)` constraint on `resumes` table)
 - `GET /api/resumes` — Get user's master profile
 - `PUT /api/resumes/{id}` — Update master profile (section-level or full replace)
 - `POST /api/resumes/{id}/sections` — Add a new section to profile
@@ -136,6 +154,7 @@ All endpoints require `Authorization: Bearer <supabase-jwt>`. JWT validated via 
 - Strict JSON Schema via `response_format` parameter
 - Pydantic validation on backend
 - Retry once on format failure
+- **Timeout:** Backend LLM client timeout = 45s. Frontend fetch timeout = 60s. Prevents gateway/Nginx from killing the connection prematurely.
 
 ### Memory System (MVP: Data Collection Only)
 - **No LLM inference** during MVP phase
@@ -172,10 +191,10 @@ All endpoints require `Authorization: Bearer <supabase-jwt>`. JWT validated via 
 
 **3. Review + Preview**
 - **Center:** Full CV preview in warm theme (serif accents, warm neutrals, amber highlights on changed sections)
-- **Right sidebar:** Change summary list with amber dots. Each item shows "why changed" explanation. Click scrolls to section.
+- **Right sidebar:** Change summary list with amber dots. Each item shows "why changed" explanation from `llm_annotations`. Click scrolls to section.
 - **Inline editing:** User can edit any section directly in the preview
 - **Bottom bar:** "Generate Cover Letter" | "Generate Interview Questions" | "Export PDF"
-- **Memory hints:** Subtle tooltips like "Based on your previous edits, we emphasized leadership outcomes"
+- **Best Practice Tips (MVP):** Static tooltips powered by `llm_annotations`, not user history. Example: hovering on a changed bullet shows "AI emphasized leadership — JD requires team management experience". True personalized Memory Hints deferred to V1.1.
 
 ### Visual Theme
 - CSS variables for warm palette: cream backgrounds (`#fffef5`), warm gold accents (`#d4a574`, `#8b6914`), sage green for positive states (`#6b8e23`)
@@ -274,7 +293,7 @@ cv-builder/
 │       │   ├── SectionForm.tsx       # Dynamic section renderer
 │       │   ├── CVPreview.tsx         # Warm-themed CV display
 │       │   ├── ChangeSidebar.tsx     # Amber change indicators
-│       │   ├── MemoryHint.tsx        # Subtle tooltip component
+│       │   ├── MemoryHint.tsx        # Static best-practice tooltip
 │       │   └── LoadingSpinner.tsx
 │       └── styles/
 │           ├── theme.css             # Warm theme CSS variables
@@ -282,6 +301,13 @@ cv-builder/
 ├── supabase/
 │   └── migrations/
 │       └── 001_initial_schema.sql
+├── .devcontainer/                    # Docker dev env for WeasyPrint C deps
+│   ├── devcontainer.json
+│   └── Dockerfile
+├── docker-compose.yml                # Backend + frontend services
 ├── pyproject.toml
 └── package.json                      # Workspace root (optional)
 ```
+
+### Local Development Environment
+WeasyPrint depends on C libraries (Pango, Cairo, GDK-PixBuf) that are painful to configure on Windows. **Use Dev Containers / Docker Compose** for local development — run FastAPI inside a Linux container to avoid native dependency issues. The `.devcontainer/` and `docker-compose.yml` are included from day one.
