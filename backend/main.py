@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from backend.database import connect_db, database, disconnect_db
+from backend.routes import resume  # noqa: F401
 
 
 @asynccontextmanager
@@ -13,6 +14,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="CV Builder MVP", lifespan=lifespan)
+
+app.include_router(resume.router)
 
 
 @app.get("/health")
