@@ -1,0 +1,40 @@
+:root {
+  --bg-cream: #fffef5;
+  --bg-warm: #f5f0e8;
+  --gold: #d4a574;
+  --gold-dark: #8b6914;
+  --sage: #6b8e23;
+  --amber: #fde68a;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --border: #d4c5a9;
+  --error: #c0392b;
+
+  --font-display: Georgia, 'Times New Roman', serif;
+  --font-body: 'Segoe UI', 'Helvetica Neue', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-cream);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--gold-dark);
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
