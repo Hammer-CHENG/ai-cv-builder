@@ -1,0 +1,10 @@
+Generate exactly 5 interview questions based on the candidate's tailored CV and the job description:
+- 3 questions based on JD requirements and gaps
+- 2 questions based on the candidate's specific experience (weak points or strong matches)
+
+Respond with ONLY valid JSON:
+{
+  "questions": [
+    {"type": "jd|cv", "question": "...", "tip": "brief answer framework"}
+  ]
+}

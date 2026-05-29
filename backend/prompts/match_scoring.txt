@@ -1,0 +1,9 @@
+Score how well the given resume profile matches the job description on a 0-100 scale.
+
+Consider:
+- Keyword overlap (skills, tools, methodologies)
+- Experience level alignment
+- Industry/domain fit
+
+Respond with ONLY valid JSON:
+{"score": <0-100 integer>}

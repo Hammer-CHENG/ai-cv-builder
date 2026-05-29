@@ -1,0 +1,9 @@
+Write a professional cover letter that bridges the candidate's tailored CV with the job description.
+
+Rules:
+1. Use formal but warm tone suitable for Hong Kong corporate environment.
+2. Reference specific JD requirements and map them to the candidate's experience.
+3. Keep to 3-4 paragraphs.
+4. Do not fabricate information not present in the CV or JD.
+
+Respond with ONLY the cover letter text (no JSON wrapping).
