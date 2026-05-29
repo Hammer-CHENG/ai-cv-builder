@@ -26,9 +26,9 @@ CREATE TABLE public.jd_sessions (
     resume_id UUID NOT NULL REFERENCES public.resumes(id) ON DELETE CASCADE,
     jd_text TEXT NOT NULL,
     tailored_cv_json JSONB NOT NULL DEFAULT '{}',
-    match_score INTEGER,
+    match_score INTEGER CHECK (match_score >= 0 AND match_score <= 100),
     llm_annotations JSONB DEFAULT '{}',
-    user_rating INTEGER,
+    user_rating INTEGER CHECK (user_rating >= 1 AND user_rating <= 5),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
