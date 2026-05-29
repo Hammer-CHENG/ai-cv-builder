@@ -102,6 +102,55 @@ export default function ReviewPreview() {
           </button>
         </div>
 
+        {/* Cover Letter (if available) */}
+        {coverLetter && (
+          <div style={{ marginTop: '16px' }}>
+            <h3 style={{ marginBottom: '8px' }}>Cover Letter</h3>
+            <div style={{
+              fontSize: '12px',
+              whiteSpace: 'pre-wrap',
+              background: 'white',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              padding: '16px',
+              lineHeight: '1.6',
+            }}>
+              {coverLetter}
+            </div>
+          </div>
+        )}
+
+        {/* Interview Questions (if available) */}
+        {interviewQuestions.length > 0 && (
+          <div style={{ marginTop: '16px' }}>
+            <h3 style={{ marginBottom: '8px' }}>Interview Questions</h3>
+            {interviewQuestions.map((q: any, i: number) => (
+              <div key={i} style={{
+                padding: '10px 12px',
+                marginBottom: '6px',
+                background: 'white',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+              }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  borderRadius: '8px',
+                  background: q.type === 'jd' ? 'var(--sage)' : 'var(--gold)',
+                  color: 'white',
+                  fontSize: '10px',
+                  marginRight: '6px',
+                  fontWeight: 'bold',
+                }}>
+                  {q.type.toUpperCase()}
+                </span>
+                <strong>{q.question}</strong>
+                {q.tip && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Tip: {q.tip}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Rating */}
         <div style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
           Was this helpful?{' '}

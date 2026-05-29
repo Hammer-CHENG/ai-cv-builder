@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, NavLink } from 'react-router-dom'
 import ProfileBuilder from './pages/ProfileBuilder'
 import JDSession from './pages/JDSession'
 import ReviewPreview from './pages/ReviewPreview'
@@ -9,8 +9,8 @@ export default function App() {
       <header className="app-header">
         <h1>CV Builder</h1>
         <nav>
-          <a href="/profile">Profile</a>
-          <a href="/jd">Tailor CV</a>
+          <NavLink to="/profile">Profile</NavLink>
+          <NavLink to="/jd">Tailor CV</NavLink>
         </nav>
       </header>
       <main className="app-main">
