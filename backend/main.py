@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from backend.database import connect_db, database, disconnect_db
-from backend.routes import resume, jd, edit_log  # noqa: F401
+from backend.routes import resume, jd, edit_log, export  # noqa: F401
 
 
 @asynccontextmanager
@@ -18,6 +18,7 @@ app = FastAPI(title="CV Builder MVP", lifespan=lifespan)
 app.include_router(resume.router)
 app.include_router(jd.router)
 app.include_router(edit_log.router)
+app.include_router(export.router)
 
 
 @app.get("/health")

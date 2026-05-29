@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+@page { size: A4; margin: 0.8in; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; line-height: 1.4; color: #1a1a1a; }
+h1 { font-size: 18pt; margin: 0 0 4pt 0; }
+h2 { font-size: 13pt; margin: 12pt 0 6pt 0; border-bottom: 1px solid #999; padding-bottom: 2pt; }
+h3 { font-size: 11pt; margin: 6pt 0 2pt 0; }
+p { margin: 2pt 0; }
+ul { margin: 2pt 0; padding-left: 18pt; }
+li { margin: 1pt 0; }
+.contact { font-size: 10pt; color: #555; margin-bottom: 8pt; }
+</style>
+</head>
+<body>
+<h1>{{ name }}</h1>
+<div class="contact">
+{% if contact.email %}{{ contact.email }}{% endif %}
+{% if contact.phone %} | {{ contact.phone }}{% endif %}
+{% if contact.location %} | {{ contact.location }}{% endif %}
+{% if contact.linkedin %} | {{ contact.linkedin }}{% endif %}
+</div>
+
+{% for section_title, entries in sections.items() %}
+<h2>{{ section_title }}</h2>
+{% for entry in entries %}
+{% if entry.fields.title %}<h3>{{ entry.fields.title }}</h3>{% endif %}
+{% if entry.fields.subtitle %}<p><em>{{ entry.fields.subtitle }}</em></p>{% endif %}
+{% if entry.fields.date_range %}<p>{{ entry.fields.date_range }}</p>{% endif %}
+{% if entry.fields.bullets %}
+<ul>
+{% for bullet in entry.fields.bullets %}
+<li>{{ bullet }}</li>
+{% endfor %}
+</ul>
+{% elif entry.fields.description %}
+<p>{{ entry.fields.description }}</p>
+{% endif %}
+{% endfor %}
+{% endfor %}
+</body>
+</html>
