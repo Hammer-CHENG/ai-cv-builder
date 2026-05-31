@@ -2,8 +2,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from backend.database import acquire
 from backend.dependencies import get_current_user
-from backend.database import database
 from backend.models.edit_log import EditLogCreate, EditLogResponse
 from backend.services.diff_service import capture_diff
 
@@ -18,18 +18,17 @@ async def create_edit_log(
     user_id = UUID(user["sub"])
     diff = capture_diff(payload.original_json, payload.edited_json)
 
-    row = await database.fetch_one(
-        """
-        INSERT INTO edit_logs (user_id, jd_session_id, original_json, edited_json, diff)
-        VALUES (:user_id, :jd_session_id, :original_json, :edited_json, :diff)
-        RETURNING id, user_id, jd_session_id, original_json, edited_json, diff, created_at
-        """,
-        values={
-            "user_id": str(user_id),
-            "jd_session_id": str(payload.jd_session_id) if payload.jd_session_id else None,
-            "original_json": payload.original_json,
-            "edited_json": payload.edited_json,
-            "diff": diff,
-        },
-    )
-    return dict(row)
+    async with acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO edit_logs (user_id, jd_session_id, original_json, edited_json, diff)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, user_id, jd_session_id, original_json, edited_json, diff, created_at
+            """,
+            str(user_id),
+            str(payload.jd_session_id) if payload.jd_session_id else None,
+            payload.original_json,
+            payload.edited_json,
+            diff,
+        )
+        return dict(row)
