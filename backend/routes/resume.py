@@ -15,12 +15,24 @@ from backend.models.resume import (
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])
 
 
+async def ensure_user(user_id: UUID, email: str = ""):
+    """Ensure the user exists in the local users table (mimics Supabase auth trigger)."""
+    async with acquire() as conn:
+        await conn.execute(
+            "INSERT INTO users (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING",
+            str(user_id),
+            email,
+        )
+
+
 @router.post("/", response_model=ResumeResponse, status_code=status.HTTP_201_CREATED)
 async def create_resume(
     payload: ResumeCreate,
     user: dict = Depends(get_current_user),
 ):
     user_id = UUID(user["sub"])
+    email = user.get("email", "")
+    await ensure_user(user_id, email)
     async with acquire() as conn:
         existing = await conn.fetchrow(
             "SELECT id FROM resumes WHERE user_id = $1", str(user_id)
