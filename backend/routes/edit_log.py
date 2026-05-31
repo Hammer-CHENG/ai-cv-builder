@@ -21,13 +21,15 @@ async def create_edit_log(
     row = await database.fetch_one(
         """
         INSERT INTO edit_logs (user_id, jd_session_id, original_json, edited_json, diff)
-        VALUES ($1, $2, $3, $4, $5)
+        VALUES (:user_id, :jd_session_id, :original_json, :edited_json, :diff)
         RETURNING id, user_id, jd_session_id, original_json, edited_json, diff, created_at
         """,
-        user_id,
-        payload.jd_session_id,
-        payload.original_json,
-        payload.edited_json,
-        diff,
+        values={
+            "user_id": str(user_id),
+            "jd_session_id": str(payload.jd_session_id) if payload.jd_session_id else None,
+            "original_json": payload.original_json,
+            "edited_json": payload.edited_json,
+            "diff": diff,
+        },
     )
     return dict(row)

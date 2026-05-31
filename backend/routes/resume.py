@@ -21,9 +21,9 @@ async def create_resume(
     user: dict = Depends(get_current_user),
 ):
     user_id = UUID(user["sub"])
-    # Check if user already has a resume (UNIQUE constraint)
     existing = await database.fetch_one(
-        "SELECT id FROM resumes WHERE user_id = $1", user_id
+        "SELECT id FROM resumes WHERE user_id = :user_id",
+        values={"user_id": str(user_id)},
     )
     if existing:
         raise HTTPException(
@@ -33,11 +33,10 @@ async def create_resume(
     row = await database.fetch_one(
         """
         INSERT INTO resumes (user_id, profile_json)
-        VALUES ($1, $2)
+        VALUES (:user_id, :profile_json)
         RETURNING id, user_id, profile_json, created_at, updated_at
         """,
-        user_id,
-        payload.profile_json,
+        values={"user_id": str(user_id), "profile_json": payload.profile_json},
     )
     return dict(row)
 
@@ -46,7 +45,8 @@ async def create_resume(
 async def get_resume(user: dict = Depends(get_current_user)):
     user_id = UUID(user["sub"])
     row = await database.fetch_one(
-        "SELECT * FROM resumes WHERE user_id = $1", user_id
+        "SELECT * FROM resumes WHERE user_id = :user_id",
+        values={"user_id": str(user_id)},
     )
     if not row:
         raise HTTPException(status_code=404, detail="Resume not found")
@@ -63,13 +63,15 @@ async def update_resume(
     row = await database.fetch_one(
         """
         UPDATE resumes
-        SET profile_json = $1, updated_at = NOW()
-        WHERE id = $2 AND user_id = $3
+        SET profile_json = :profile_json, updated_at = NOW()
+        WHERE id = :resume_id AND user_id = :user_id
         RETURNING id, user_id, profile_json, created_at, updated_at
         """,
-        payload.profile_json,
-        resume_id,
-        user_id,
+        values={
+            "profile_json": payload.profile_json,
+            "resume_id": str(resume_id),
+            "user_id": str(user_id),
+        },
     )
     if not row:
         raise HTTPException(status_code=404, detail="Resume not found")
@@ -83,17 +85,14 @@ async def add_section(
     user: dict = Depends(get_current_user),
 ):
     user_id = UUID(user["sub"])
-    # Get current profile_json
     row = await database.fetch_one(
-        "SELECT profile_json FROM resumes WHERE id = $1 AND user_id = $2",
-        resume_id,
-        user_id,
+        "SELECT profile_json FROM resumes WHERE id = :resume_id AND user_id = :user_id",
+        values={"resume_id": str(resume_id), "user_id": str(user_id)},
     )
     if not row:
         raise HTTPException(status_code=404, detail="Resume not found")
     profile = dict(row["profile_json"])
     sections = profile.get("sections", {})
-    # Merge entries (append or replace)
     existing = sections.get(payload.section_name, [])
     existing_ids = {e.get("id") for e in existing}
     for entry in payload.entries:
@@ -105,12 +104,14 @@ async def add_section(
     updated = await database.fetch_one(
         """
         UPDATE resumes
-        SET profile_json = $1, updated_at = NOW()
-        WHERE id = $2 AND user_id = $3
+        SET profile_json = :profile_json, updated_at = NOW()
+        WHERE id = :resume_id AND user_id = :user_id
         RETURNING id, user_id, profile_json, created_at, updated_at
         """,
-        profile,
-        resume_id,
-        user_id,
+        values={
+            "profile_json": profile,
+            "resume_id": str(resume_id),
+            "user_id": str(user_id),
+        },
     )
     return dict(updated)
