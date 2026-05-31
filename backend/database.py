@@ -1,3 +1,4 @@
+import json
 import asyncpg
 from contextlib import asynccontextmanager
 
@@ -11,6 +12,16 @@ def _to_asyncpg_url(url: str) -> str:
     return url.replace("postgresql+asyncpg://", "postgresql://")
 
 
+async def _init_conn(conn):
+    """Set JSON/JSONB type codecs so asyncpg handles dicts properly."""
+    await conn.set_type_codec(
+        'json', encoder=json.dumps, decoder=json.loads, schema='pg_catalog'
+    )
+    await conn.set_type_codec(
+        'jsonb', encoder=json.dumps, decoder=json.loads, schema='pg_catalog'
+    )
+
+
 async def get_pool() -> asyncpg.Pool:
     """Get or create the asyncpg connection pool."""
     global _pool
@@ -19,6 +30,7 @@ async def get_pool() -> asyncpg.Pool:
             dsn=_to_asyncpg_url(settings.database_url),
             min_size=2,
             max_size=10,
+            init=_init_conn,
         )
     return _pool
 
