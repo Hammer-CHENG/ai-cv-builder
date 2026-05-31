@@ -7,10 +7,24 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>CV Builder</h1>
+        <h1><span>CV</span> Builder</h1>
         <nav>
-          <NavLink to="/profile">Profile</NavLink>
-          <NavLink to="/jd">Tailor CV</NavLink>
+          {({ isActive }: any) => (
+            <>
+              <NavLink
+                to="/profile"
+                className={({ isActive }) => isActive ? 'active' : ''}
+              >
+                Profile
+              </NavLink>
+              <NavLink
+                to="/jd"
+                className={({ isActive }) => isActive ? 'active' : ''}
+              >
+                Tailor CV
+              </NavLink>
+            </>
+          )}
         </nav>
       </header>
       <main className="app-main">

@@ -58,119 +58,65 @@ export default function ReviewPreview() {
   const coverLetter = annotations.cover_letter || ''
 
   return (
-    <div style={{ display: 'flex', gap: '0', minHeight: 'calc(100vh - 60px)' }}>
-      {/* Center: CV Preview */}
-      <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+    <div className="review-layout page-enter">
+      <div className="review-main">
+        <h2 style={{ marginBottom: '16px', fontSize: '20px' }}>Your Tailored CV</h2>
         <CVPreview cvJson={cvJson} annotations={annotations} onChange={setCvJson} />
 
-        {/* Bottom action bar */}
-        <div style={{
-          marginTop: '24px',
-          padding: '12px',
-          background: 'var(--bg-warm)',
-          borderRadius: '4px',
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-        }}>
+        {/* Actions */}
+        <div className="review-actions">
           <button
             onClick={handleExport}
             disabled={exporting}
-            style={{
-              padding: '8px 20px',
-              background: 'var(--gold-dark)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontFamily: 'var(--font-display)',
-            }}
+            className="btn btn-primary"
           >
-            {exporting ? 'Generating...' : 'Export PDF'}
+            {exporting ? 'Generating PDF...' : 'Export PDF'}
           </button>
           <button
             onClick={() => navigate('/jd')}
-            style={{
-              padding: '8px 20px',
-              background: 'transparent',
-              border: '1px solid var(--gold)',
-              borderRadius: '4px',
-              color: 'var(--gold-dark)',
-              fontFamily: 'var(--font-display)',
-            }}
+            className="btn btn-secondary"
           >
             New JD Session
           </button>
         </div>
 
-        {/* Cover Letter (if available) */}
-        {coverLetter && (
-          <div style={{ marginTop: '16px' }}>
-            <h3 style={{ marginBottom: '8px' }}>Cover Letter</h3>
-            <div style={{
-              fontSize: '12px',
-              whiteSpace: 'pre-wrap',
-              background: 'white',
-              border: '1px solid var(--border)',
-              borderRadius: '4px',
-              padding: '16px',
-              lineHeight: '1.6',
-            }}>
-              {coverLetter}
-            </div>
-          </div>
-        )}
-
-        {/* Interview Questions (if available) */}
-        {interviewQuestions.length > 0 && (
-          <div style={{ marginTop: '16px' }}>
-            <h3 style={{ marginBottom: '8px' }}>Interview Questions</h3>
-            {interviewQuestions.map((q: any, i: number) => (
-              <div key={i} style={{
-                padding: '10px 12px',
-                marginBottom: '6px',
-                background: 'white',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-              }}>
-                <span style={{
-                  display: 'inline-block',
-                  padding: '2px 8px',
-                  borderRadius: '8px',
-                  background: q.type === 'jd' ? 'var(--sage)' : 'var(--gold)',
-                  color: 'white',
-                  fontSize: '10px',
-                  marginRight: '6px',
-                  fontWeight: 'bold',
-                }}>
-                  {q.type.toUpperCase()}
-                </span>
-                <strong>{q.question}</strong>
-                {q.tip && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Tip: {q.tip}</div>}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Rating */}
-        <div style={{ marginTop: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-          Was this helpful?{' '}
+        <div className="rating-bar">
+          <span>Was this helpful?</span>
           {[1, 2, 3, 4, 5].map((n) => (
             <span
               key={n}
+              className={`star ${n <= (rating || 0) ? 'active' : 'inactive'}`}
               onClick={() => handleRate(n)}
-              style={{
-                cursor: 'pointer',
-                color: n <= (rating || 0) ? 'var(--gold)' : 'var(--border)',
-                fontSize: '18px',
-              }}
             >
               ★
             </span>
           ))}
         </div>
+
+        {/* Cover Letter */}
+        {coverLetter && (
+          <div>
+            <h3 className="sidebar-section-title">Cover Letter</h3>
+            <div className="cover-letter-display">{coverLetter}</div>
+          </div>
+        )}
+
+        {/* Interview Questions */}
+        {interviewQuestions.length > 0 && (
+          <div>
+            <h3 className="sidebar-section-title">Interview Questions</h3>
+            {interviewQuestions.map((q: any, i: number) => (
+              <div key={i} className="question-card">
+                <span className={`question-type ${q.type}`}>{q.type.toUpperCase()}</span>
+                <div className="question-text">{q.question}</div>
+                {q.tip && <div className="question-tip">Tip: {q.tip}</div>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Right: Change Sidebar */}
       <ChangeSidebar
         annotations={annotations}
         coverLetter={coverLetter}

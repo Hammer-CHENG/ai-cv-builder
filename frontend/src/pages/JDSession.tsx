@@ -27,11 +27,10 @@ export default function JDSession() {
 
   const handleSubmit = async () => {
     if (!resumeId) {
-      alert('Please create your profile first.')
+      navigate('/profile')
       return
     }
     if (!jdText.trim()) {
-      alert('Please paste a job description.')
       return
     }
     setSubmitting(true)
@@ -47,84 +46,60 @@ export default function JDSession() {
   if (loading) return <LoadingSpinner />
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '16px' }}>Tailor Your CV</h2>
+    <div className="page-enter">
+      <h1 className="page-title">Tailor Your CV</h1>
+      <p className="page-subtitle">Paste a job description and let AI optimize your CV to match. We'll highlight the changes and explain why.</p>
 
-      <div style={{ marginBottom: '16px' }}>
-        <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-          Paste Job Description
-        </label>
-        <textarea
-          value={jdText}
-          onChange={(e) => setJdText(e.target.value)}
-          placeholder="Paste the full job description here..."
-          rows={10}
-          style={{
-            width: '100%',
-            padding: '12px',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            fontFamily: 'var(--font-body)',
-            fontSize: '14px',
-            resize: 'vertical',
-          }}
-        />
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card-body">
+          <div className="form-group">
+            <label>Job Description</label>
+            <textarea
+              className="form-textarea"
+              value={jdText}
+              onChange={(e) => setJdText(e.target.value)}
+              placeholder="Paste the full job description here — including requirements, responsibilities, and qualifications..."
+              rows={12}
+              style={{ minHeight: '180px' }}
+            />
+          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="btn btn-primary btn-lg"
+          >
+            {submitting ? 'AI is tailoring your CV...' : 'Tailor My CV'}
+          </button>
+        </div>
       </div>
-
-      <button
-        onClick={handleSubmit}
-        disabled={submitting}
-        style={{
-          padding: '10px 24px',
-          background: submitting ? 'var(--text-muted)' : 'var(--gold-dark)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '15px',
-          fontFamily: 'var(--font-display)',
-        }}
-      >
-        {submitting ? 'AI is tailoring your CV...' : 'Tailor My CV'}
-      </button>
 
       {/* Session History */}
       {sessions.length > 0 && (
-        <div style={{ marginTop: '32px' }}>
-          <h3 style={{ marginBottom: '8px' }}>Recent Sessions</h3>
+        <div>
+          <h3 style={{ marginBottom: '12px', fontSize: '16px', color: 'var(--text-secondary)', fontWeight: '400', fontStyle: 'italic' }}>
+            Recent Sessions
+          </h3>
           {sessions.map((s) => (
             <div
               key={s.id}
+              className="session-card"
               onClick={() => navigate(`/review/${s.id}`)}
-              style={{
-                padding: '12px',
-                border: '1px solid var(--border)',
-                borderRadius: '4px',
-                marginBottom: '8px',
-                cursor: 'pointer',
-                background: 'white',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
             >
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'bold' }}>
-                  {s.jd_text.substring(0, 60)}...
+                <div className="session-card-text">
+                  {s.jd_text.substring(0, 80)}...
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  {new Date(s.created_at).toLocaleDateString()}
+                <div className="session-card-date">
+                  {new Date(s.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
                 </div>
               </div>
-              {s.match_score && (
-                <div style={{
-                  padding: '4px 12px',
-                  borderRadius: '12px',
-                  background: s.match_score >= 70 ? 'var(--sage)' : 'var(--amber)',
-                  color: s.match_score >= 70 ? 'white' : 'var(--gold-dark)',
-                  fontWeight: 'bold',
-                  fontSize: '13px',
-                }}>
-                  {s.match_score}%
+              {s.match_score != null && (
+                <div className={`match-badge ${s.match_score >= 70 ? 'high' : 'medium'}`}>
+                  {s.match_score}% match
                 </div>
               )}
             </div>

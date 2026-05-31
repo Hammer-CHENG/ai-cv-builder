@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { api } from '../api/client'
 import SectionEntry from '../components/SectionForm'
 
@@ -23,7 +23,6 @@ export default function ProfileBuilder() {
     api.resume.get().then(
       (data) => {
         const profile = data.profile_json
-        // Convert bullets arrays to newline-separated strings for textarea
         for (const [sectionName, entries] of Object.entries((profile as any).sections || {})) {
           for (const entry of (entries as any[])) {
             if (entry.fields?.bullets && Array.isArray(entry.fields.bullets)) {
@@ -35,11 +34,10 @@ export default function ProfileBuilder() {
         setResumeId(data.id)
         setLoading(false)
       },
-      () => setLoading(false) // 404 = no profile yet
+      () => setLoading(false)
     )
   }, [reset])
 
-  // Process data before sending: convert bullets strings to arrays
   const processData = (data: any) => {
     const processed = JSON.parse(JSON.stringify(data))
     for (const [sectionName, entries] of Object.entries(processed.sections || {})) {
@@ -78,44 +76,47 @@ export default function ProfileBuilder() {
     forceRender(n => n + 1)
   }
 
-  if (loading) return <p>Loading profile...</p>
+  if (loading) return <p className="spinner-container">Loading profile...</p>
 
   const sections = getValues('sections') || {}
   const allSectionNames = [...PREBUILT_SECTIONS, ...Object.keys(sections).filter(s => !PREBUILT_SECTIONS.includes(s))]
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '16px' }}>My Profile</h2>
+    <div className="page-enter">
+      <h1 className="page-title">My Profile</h1>
+      <p className="page-subtitle">Build your master profile — this will be tailored to each job description later.</p>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Contact Info */}
-        <fieldset style={{ border: '1px solid var(--border)', padding: '16px', borderRadius: '4px', marginBottom: '16px', background: 'white' }}>
-          <legend style={{ fontFamily: 'var(--font-display)', color: 'var(--gold-dark)', fontWeight: 'bold', padding: '0 8px' }}>
-            Contact Information
-          </legend>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Full Name</label>
-              <input {...register('contact.name')} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Email</label>
-              <input {...register('contact.email')} type="email" style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Phone</label>
-              <input {...register('contact.phone')} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }} />
-            </div>
-            <div>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Location</label>
-              <input {...register('contact.location')} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }} />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>LinkedIn</label>
-              <input {...register('contact.linkedin')} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }} />
+        <div className="card" style={{ marginBottom: '24px' }}>
+          <div className="card-header">
+            <h3 style={{ marginBottom: '12px', fontSize: '16px' }}>Contact Information</h3>
+          </div>
+          <div className="card-body">
+            <div className="form-grid-2">
+              <div className="form-group">
+                <label>Full Name</label>
+                <input {...register('contact.name')} className="form-input" placeholder="John Doe" />
+              </div>
+              <div className="form-group">
+                <label>Email</label>
+                <input {...register('contact.email')} type="email" className="form-input" placeholder="john@example.com" />
+              </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input {...register('contact.phone')} className="form-input" placeholder="+852 1234 5678" />
+              </div>
+              <div className="form-group">
+                <label>Location</label>
+                <input {...register('contact.location')} className="form-input" placeholder="Hong Kong" />
+              </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label>LinkedIn</label>
+                <input {...register('contact.linkedin')} className="form-input" placeholder="https://linkedin.com/in/johndoe" />
+              </div>
             </div>
           </div>
-        </fieldset>
+        </div>
 
         {/* All Sections (prebuilt + custom) */}
         {allSectionNames.map((sectionName) => (
@@ -130,38 +131,23 @@ export default function ProfileBuilder() {
         ))}
 
         {/* Custom Section */}
-        <div style={{ marginBottom: '16px' }}>
-          <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Add Custom Section</label>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              value={customSection}
-              onChange={(e) => setCustomSection(e.target.value)}
-              placeholder="e.g., Volunteer Work, Awards"
-              style={{ flex: 1, padding: '6px 8px', border: '1px solid var(--border)', borderRadius: '3px' }}
-            />
-            <button type="button" onClick={addCustomSection} style={{
-              padding: '6px 16px',
-              background: 'var(--gold)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '3px',
-            }}>
-              Add
-            </button>
-          </div>
+        <div className="custom-section-bar">
+          <input
+            className="form-input"
+            value={customSection}
+            onChange={(e) => setCustomSection(e.target.value)}
+            placeholder="Add a custom section, e.g., Volunteer Work, Awards, Publications"
+          />
+          <button type="button" className="btn btn-secondary" onClick={addCustomSection}>
+            Add
+          </button>
         </div>
 
-        <button type="submit" disabled={saving} style={{
-          padding: '10px 24px',
-          background: saving ? 'var(--text-muted)' : 'var(--gold-dark)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontSize: '15px',
-          fontFamily: 'var(--font-display)',
-        }}>
-          {saving ? 'Saving...' : resumeId ? 'Update Profile' : 'Create Profile'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <button type="submit" className="btn btn-primary btn-lg" disabled={saving}>
+            {saving ? 'Saving...' : resumeId ? 'Update Profile' : 'Create Profile'}
+          </button>
+        </div>
       </form>
     </div>
   )
@@ -176,7 +162,6 @@ function SectionGroup({ sectionName, register, control, setValue, forceRender }:
 }) {
   const [expanded, setExpanded] = useState(false)
 
-  // Get current entries safely
   const sections = control._formValues?.sections || {}
   const entries = sections[sectionName] || []
 
@@ -195,45 +180,26 @@ function SectionGroup({ sectionName, register, control, setValue, forceRender }:
   }
 
   return (
-    <details style={{
-      border: '1px solid var(--border)',
-      borderRadius: '4px',
-      marginBottom: '8px',
-      background: 'white',
-      padding: '12px',
-    }} open={expanded} onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}>
-      <summary style={{
-        fontFamily: 'var(--font-display)',
-        color: 'var(--gold-dark)',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-      }}>
-        {sectionName}
-      </summary>
-      {/* Render entries */}
-      {entries.map((_: any, idx: number) => (
-        <SectionEntry
-          key={idx}
-          sectionType={sectionName}
-          index={idx}
-          register={register}
-          remove={handleRemoveEntry}
-        />
-      ))}
-      <button
-        type="button"
-        onClick={handleAddEntry}
-        style={{
-          padding: '6px 12px',
-          background: 'transparent',
-          border: '1px dashed var(--gold)',
-          borderRadius: '3px',
-          color: 'var(--gold-dark)',
-          marginTop: '8px',
-        }}
-      >
-        + Add Entry
-      </button>
+    <details
+      className="section-accordion"
+      open={expanded}
+      onToggle={(e) => setExpanded((e.target as HTMLDetailsElement).open)}
+    >
+      <summary>{sectionName}</summary>
+      <div className="section-content">
+        {entries.map((_: any, idx: number) => (
+          <SectionEntry
+            key={idx}
+            sectionType={sectionName}
+            index={idx}
+            register={register}
+            remove={handleRemoveEntry}
+          />
+        ))}
+        <button type="button" className="btn-add" onClick={handleAddEntry}>
+          + Add Entry
+        </button>
+      </div>
     </details>
   )
 }

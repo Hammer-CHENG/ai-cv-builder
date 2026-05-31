@@ -46,55 +46,27 @@ export default function SectionEntry({ sectionType, index, register, remove }: S
   ]
 
   return (
-    <div className="section-entry" style={{
-      border: '1px solid var(--border)',
-      borderRadius: '4px',
-      padding: '12px',
-      marginBottom: '8px',
-      background: 'white',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontFamily: 'var(--font-display)', color: 'var(--gold-dark)', fontWeight: 'bold' }}>
-          Entry #{index + 1}
-        </span>
-        <button
-          type="button"
-          onClick={() => remove(index)}
-          style={{ color: 'var(--error)', background: 'none', border: 'none', fontSize: '14px' }}
-        >
+    <div className="section-entry">
+      <div className="section-entry-header">
+        <span className="section-entry-label">Entry #{index + 1}</span>
+        <button type="button" className="btn-remove" onClick={() => remove(index)}>
           Remove
         </button>
       </div>
       {schema.map((field) => (
-        <div key={field.name} style={{ marginBottom: '8px' }}>
-          <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
-            {field.name.replace('_', ' ')}
-          </label>
+        <div key={field.name} className="form-group" style={{ marginBottom: '12px' }}>
+          <label>{field.name.replace('_', ' ')}</label>
           {field.type === 'textarea' ? (
             <textarea
               {...register(`sections.${sectionType}.${index}.fields.${field.name}`)}
+              className="form-textarea"
               rows={3}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid var(--border)',
-                borderRadius: '3px',
-                fontFamily: 'var(--font-body)',
-                fontSize: '14px',
-              }}
             />
           ) : (
             <input
               type="text"
               {...register(`sections.${sectionType}.${index}.fields.${field.name}`)}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '1px solid var(--border)',
-                borderRadius: '3px',
-                fontFamily: 'var(--font-body)',
-                fontSize: '14px',
-              }}
+              className="form-input"
             />
           )}
         </div>
