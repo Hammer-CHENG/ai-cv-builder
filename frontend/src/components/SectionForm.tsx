@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { UseFormRegister, FieldArrayWithId, UseFieldArrayRemove } from 'react-hook-form'
+import { UseFormRegister, UseFieldArrayRemove } from 'react-hook-form'
 
 interface SectionFieldProps {
   sectionType: string

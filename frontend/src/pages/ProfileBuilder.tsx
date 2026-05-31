@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { api } from '../api/client'
 import SectionEntry from '../components/SectionForm'
@@ -6,7 +6,7 @@ import SectionEntry from '../components/SectionForm'
 const PREBUILT_SECTIONS = ['Work Experience', 'Education', 'Projects', 'Certifications', 'Skills', 'Languages']
 
 export default function ProfileBuilder() {
-  const { register, control, handleSubmit, reset } = useForm({
+  const { register, control, handleSubmit, reset, setValue, getValues } = useForm({
     defaultValues: {
       contact: { name: '', email: '', phone: '', location: '', linkedin: '' },
       sections: {},
@@ -16,12 +16,22 @@ export default function ProfileBuilder() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [customSection, setCustomSection] = useState('')
+  const [, forceRender] = useState(0)
 
   // Load existing profile on mount
   useEffect(() => {
     api.resume.get().then(
       (data) => {
-        reset(data.profile_json)
+        const profile = data.profile_json
+        // Convert bullets arrays to newline-separated strings for textarea
+        for (const [sectionName, entries] of Object.entries((profile as any).sections || {})) {
+          for (const entry of (entries as any[])) {
+            if (entry.fields?.bullets && Array.isArray(entry.fields.bullets)) {
+              entry.fields.bullets = entry.fields.bullets.join('\n')
+            }
+          }
+        }
+        reset(profile)
         setResumeId(data.id)
         setLoading(false)
       },
@@ -29,14 +39,28 @@ export default function ProfileBuilder() {
     )
   }, [reset])
 
+  // Process data before sending: convert bullets strings to arrays
+  const processData = (data: any) => {
+    const processed = JSON.parse(JSON.stringify(data))
+    for (const [sectionName, entries] of Object.entries(processed.sections || {})) {
+      for (const entry of (entries as any[])) {
+        if (entry.fields?.bullets && typeof entry.fields.bullets === 'string') {
+          entry.fields.bullets = entry.fields.bullets.split('\n').filter((b: string) => b.trim())
+        }
+      }
+    }
+    return processed
+  }
+
   const onSubmit = async (data: any) => {
     setSaving(true)
+    const processed = processData(data)
     try {
       if (resumeId) {
-        const updated = await api.resume.update(resumeId, data)
+        const updated = await api.resume.update(resumeId, processed)
         setResumeId(updated.id)
       } else {
-        const created = await api.resume.create(data)
+        const created = await api.resume.create(processed)
         setResumeId(created.id)
       }
       alert('Profile saved!')
@@ -49,16 +73,15 @@ export default function ProfileBuilder() {
 
   const addCustomSection = () => {
     if (!customSection.trim()) return
-    // Append to sections in form — user can add entries next
-    const current = control._formValues?.sections || {}
-    control._formValues = {
-      ...control._formValues,
-      sections: { ...current, [customSection]: [] },
-    }
+    setValue(`sections.${customSection}`, [], { shouldDirty: true })
     setCustomSection('')
+    forceRender(n => n + 1)
   }
 
   if (loading) return <p>Loading profile...</p>
+
+  const sections = getValues('sections') || {}
+  const allSectionNames = [...PREBUILT_SECTIONS, ...Object.keys(sections).filter(s => !PREBUILT_SECTIONS.includes(s))]
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
@@ -94,13 +117,15 @@ export default function ProfileBuilder() {
           </div>
         </fieldset>
 
-        {/* Prebuilt Sections */}
-        {PREBUILT_SECTIONS.map((sectionName) => (
+        {/* All Sections (prebuilt + custom) */}
+        {allSectionNames.map((sectionName) => (
           <SectionGroup
             key={sectionName}
             sectionName={sectionName}
             register={register}
             control={control}
+            setValue={setValue}
+            forceRender={forceRender}
           />
         ))}
 
@@ -142,12 +167,32 @@ export default function ProfileBuilder() {
   )
 }
 
-function SectionGroup({ sectionName, register, control }: {
+function SectionGroup({ sectionName, register, control, setValue, forceRender }: {
   sectionName: string
   register: any
   control: any
+  setValue: any
+  forceRender: (fn: (n: number) => number) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+
+  // Get current entries safely
+  const sections = control._formValues?.sections || {}
+  const entries = sections[sectionName] || []
+
+  const handleAddEntry = () => {
+    const currentEntries = [...(sections[sectionName] || [])]
+    currentEntries.push({ id: crypto.randomUUID(), fields: {} })
+    setValue(`sections.${sectionName}`, currentEntries, { shouldDirty: true })
+    forceRender(n => n + 1)
+  }
+
+  const handleRemoveEntry = (idx: number) => {
+    const currentEntries = [...(sections[sectionName] || [])]
+    currentEntries.splice(idx, 1)
+    setValue(`sections.${sectionName}`, currentEntries, { shouldDirty: true })
+    forceRender(n => n + 1)
+  }
 
   return (
     <details style={{
@@ -165,28 +210,19 @@ function SectionGroup({ sectionName, register, control }: {
       }}>
         {sectionName}
       </summary>
-      {/* Render entries if they exist */}
-      {control._formValues?.sections?.[sectionName]?.map((_: any, idx: number) => (
+      {/* Render entries */}
+      {entries.map((_: any, idx: number) => (
         <SectionEntry
           key={idx}
           sectionType={sectionName}
           index={idx}
           register={register}
-          remove={() => {
-            const entries = control._formValues.sections[sectionName]
-            entries.splice(idx, 1)
-            control._formValues = { ...control._formValues }
-          }}
+          remove={handleRemoveEntry}
         />
       ))}
       <button
         type="button"
-        onClick={() => {
-          const current = control._formValues?.sections || {}
-          const entries = current[sectionName] || []
-          entries.push({ id: crypto.randomUUID(), fields: {} })
-          control._formValues = { ...control._formValues, sections: { ...current, [sectionName]: entries } }
-        }}
+        onClick={handleAddEntry}
         style={{
           padding: '6px 12px',
           background: 'transparent',
